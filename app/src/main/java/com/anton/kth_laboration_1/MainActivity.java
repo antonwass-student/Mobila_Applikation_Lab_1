@@ -30,7 +30,8 @@ public class MainActivity extends AppCompatActivity {
     private Currency selectedFrom;
     private Currency selectedTo;
 
-    public static final String currency_url = "http://maceo.sth.kth.se/Home/eurofxref";
+    //public static final String currency_url = "http://maceo.sth.kth.se/Home/eurofxref";
+    public static final String currency_url = "http://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,29 +129,32 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected CurrencyManager doInBackground(String... params){
-            android.os.Debug.waitForDebugger();
+            //android.os.Debug.waitForDebugger();
             try{
                 URL url = new URL(params[0]);
                 CurrencyManager mngr = new CurrencyManager(activity);
 
+                //attempt to load currencies from existing file.
                 mngr.loadCurrenciesFromFile();
 
-                Calendar today = Calendar.getInstance();
+                if(!mngr.isLoadedFromFile()){
+                    //file was not loaded. Get from web
+                    mngr.loadCurrencies(url);
+                }else{
+                    //data was loaded from file. compare dates
+                    Calendar today = Calendar.getInstance();
 
-                mngr.getLoadDate().compareTo(today);
-                long diff = today.getTime().getTime() - mngr.getLoadDate().getTime().getTime();
+                    mngr.getLoadDate().compareTo(today);
+                    long diff = today.getTime().getTime() - mngr.getLoadDate().getTime().getTime();
 
-                long days = TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS);
+                    long days = TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS);
 
-                if(days > 1){
-                    //we should refresh data
-
-                    if(mngr.loadCurrencies(url) == false){
-                        //download from web failed
-                        //use the data from the file
-                        mngr.loadCurrenciesFromFile();
+                    if(days > 1){
+                        //we should refresh data
+                        mngr.loadCurrencies(url);
                     }
                 }
+
                 return mngr;
             }catch(Exception e){
                 this.cancel(true);
@@ -165,9 +169,11 @@ public class MainActivity extends AppCompatActivity {
             currencyManager = currencyMngr;
 
             if(currencyManager.isLoadedFromFile()){
-                showToast("Could not download new data. Using currencies from " + currencyMngr.getLoadDate().getTime().toString() + " instead.");
+                showToast("Using currencies from " + currencyMngr.getLoadDate().getTime().toString());
+            }else{
+                showToast("Downloaded " + currencyManager.getCurrencies().size() + " items.");
             }
-            showToast("Loaded " + currencyManager.getCurrencies().size() + " items.");
+
 
             Spinner spinner_from = (Spinner) findViewById(R.id.spinner_rate_from);
             Spinner spinner_to = (Spinner) findViewById(R.id.spinner_cur_to);

@@ -52,10 +52,6 @@ public class CurrencyManager {
      */
     public boolean loadCurrencies(URL url){
 
-        currencies.clear();
-
-        currencies.add(new Currency("EUR", 1));
-
         HttpURLConnection urlConnection = null;
         try{
 
@@ -64,6 +60,10 @@ public class CurrencyManager {
             urlConnection.connect();
 
             CurrencyParser parser = new CurrencyParser();
+
+            currencies.clear();
+
+            currencies.add(new Currency("EUR", 1));
 
             loadDate = parser.parse(urlConnection.getInputStream(), currencies);
 
@@ -126,7 +126,7 @@ public class CurrencyManager {
      * @return the arraylist containing the currencies.
      */
     public ArrayList<Currency> loadCurrenciesFromFile(){
-        loadedFromFile = true;
+
         FileInputStream inputStream;
         ArrayList<Currency> loadedCurrencies = new ArrayList();
 
@@ -151,6 +151,11 @@ public class CurrencyManager {
             e.printStackTrace();
         }
 
+        if(loadedCurrencies.size() > 1){
+            loadedFromFile = true;
+        }else{
+            loadedFromFile = false;
+        }
         currencies = loadedCurrencies;
         return loadedCurrencies;
     }
